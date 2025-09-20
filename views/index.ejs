@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Учебные предметы</title>
+    <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+    <div class="containуer">
+        <header>
+            <h1>Система управления учебными предметами</h1>
+            <div class="user-info">
+                <p>Вы вошли как: <strong><%= user.username %></strong> (<%= user.role %>)</p>
+                <a href="/logout" class="btn btn-logout">Выйти</a>
+            </div>
+        </header>
+
+        <% if (user.role === 'admin') { %>
+        <div class="admin-actions">
+            <a href="/add-department" class="btn btn-secondary">Добавить кафедру</a>
+            <a href="/add-field" class="btn btn-secondary">Добавить направление</a>
+            <a href="/add-teacher" class="btn btn-secondary">Добавить преподавателя</a>
+        </div>
+        <% } %>
+
+        <h2>Список учебных предметов</h2>
+        
+        <table>
+            <thead>
+                <tr>
+                    <th>Название</th>
+                    <th>Стоимость</th>
+                    <th>Часы</th>
+                    <th>Тип</th>
+                    <th>Кафедра</th>
+                    <th>Направление</th>
+                    <th>Преподаватель</th>
+                    <th>Доступен</th>
+                    <% if (user.role === 'admin') { %>
+                    <th>Действия</th>
+                    <% } %>
+                </tr>
+            </thead>
+            <tbody>
+                <% subjects.forEach(subject => { %>
+                    <tr>
+                        <td><%= subject.name %></td>
+                        <td><%= subject.price %> руб.</td>
+                        <td><%= subject.hours %> ч.</td>
+                        <td><%= subject.type %></td>
+                        <td><%= subject.Department.name %> (<%= subject.Department.faculty %>)</td>
+                        <td><%= subject.Field.name %></td>
+                        <td><%= subject.Teacher.name %> (<%= subject.Teacher.position %>)</td>
+                        <td><%= subject.isAvailable ? 'Да' : 'Нет' %></td>
+                        <% if (user.role === 'admin') { %>
+                        <td class="actions">
+                            <a href="/edit-subject/<%= subject.id %>" class="btn btn-edit">✏️</a>
+                            <form action="/delete-subject/<%= subject.id %>" method="POST" style="display:inline;">
+                                <button type="submit" class="btn btn-delete" onclick="return confirm('Удалить предмет?')">🗑️</button>
+                            </form>
+                        </td>
+                        <% } %>
+                    </tr>
+                <% }); %>
+            </tbody>
+        </table>
+
+        <% if (subjects.length === 0) { %>
+            <p class="no-data">Нет доступных учебных предметов</p>
+        <% } %>
+    </div>
+</body>
+</html>

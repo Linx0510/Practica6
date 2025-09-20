@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Добавить преподавателя</title>
+    <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+    <div class="container">
+        <h2>Добавить преподавателя</h2>
+        
+        <form action="/add-teacher" method="POST">
+            <input type="text" name="name" placeholder="ФИО преподавателя" required>
+            <input type="text" name="position" placeholder="Должность" required>
+            <input type="email" name="email" placeholder="Email">
+            <input type="tel" name="phone" placeholder="Телефон">
+            
+            <button type="submit">Добавить преподавателя</button>
+        </form>
+        
+        <a href="/" class="btn-link">Назад к списку</a>
+    </div>
+</body>
+</html>

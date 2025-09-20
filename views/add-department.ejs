@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Добавить кафедру</title>
+    <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+    <div class="container">
+        <h2>Добавить кафедру</h2>
+        
+        <form action="/add-department" method="POST">
+            <input type="text" name="name" placeholder="Название кафедры" required>
+            <input type="text" name="faculty" placeholder="Факультет" required>
+            <input type="text" name="head" placeholder="Заведующий кафедрой">
+            
+            <button type="submit">Добавить кафедру</button>
+        </form>
+        
+        <a href="/" class="btn-link">Назад к списку</a>
+    </div>
+</body>
+</html>

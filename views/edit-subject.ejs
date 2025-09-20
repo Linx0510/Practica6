@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Редактировать учебный предмет</title>
+    <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+    <div class="container">
+        <h2>Редактировать учебный предмет</h2>
+        
+        <form action="/edit-subject/<%= subject.id %>" method="POST">
+            <input type="text" name="name" value="<%= subject.name %>" placeholder="Название предмета" required>
+            <input type="number" name="price" value="<%= subject.price %>" placeholder="Стоимость" step="0.01" required>
+            <input type="number" name="hours" value="<%= subject.hours %>" placeholder="Количество часов" required>
+            
+            <select name="type" required>
+                <option value="лекция" <%= subject.type === 'лекция' ? 'selected' : '' %>>Лекция</option>
+                <option value="практика" <%= subject.type === 'практика' ? 'selected' : '' %>>Практика</option>
+                <option value="семинар" <%= subject.type === 'семинар' ? 'selected' : '' %>>Семинар</option>
+                <option value="лабораторная" <%= subject.type === 'лабораторная' ? 'selected' : '' %>>Лабораторная</option>
+            </select>
+
+            <select name="departmentId" required>
+                <% departments.forEach(dept => { %>
+                    <option value="<%= dept.id %>" <%= subject.DepartmentId === dept.id ? 'selected' : '' %>>
+                        <%= dept.name %> (<%= dept.faculty %>)
+                    </option>
+                <% }); %>
+            </select>
+
+            <select name="fieldId" required>
+                <% fields.forEach(field => { %>
+                    <option value="<%= field.id %>" <%= subject.FieldId === field.id ? 'selected' : '' %>>
+                        <%= field.name %>
+                    </option>
+                <% }); %>
+            </select>
+
+            <select name="teacherId" required>
+                <% teachers.forEach(teacher => { %>
+                    <option value="<%= teacher.id %>" <%= subject.TeacherId === teacher.id ? 'selected' : '' %>>
+                        <%= teacher.name %> (<%= teacher.position %>)
+                    </option>
+                <% }); %>
+            </select>
+
+            <label>
+                <input type="checkbox" name="isAvailable" <%= subject.isAvailable ? 'checked' : '' %>>
+                Доступен для записи
+            </label>
+
+            <button type="submit">Сохранить изменения</button>
+        </form>
+        
+        <a href="/" class="btn-link">Назад к списку</a>
+    </div>
+</body>
+</html>

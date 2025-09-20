@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/style.css">
+    <title>Редактировать пользователя</title>
+</head>
+<body>
+    <div class="container">
+        <h2>Редактировать пользователя</h2>
+        
+        <form action="/edit-user/<%= user.id %>" method="POST">
+            <input type="text" name="first_name" value="<%= user.first_name %>" placeholder="Имя" required>
+            <input type="text" name="last_name" value="<%= user.last_name %>" placeholder="Фамилия" required>
+            <input type="text" name="phone" value="<%= user.phone %>" placeholder="Телефон" required>
+            <input type="email" name="email" value="<%= user.email || '' %>" placeholder="Email">
+            
+            <select name="socialStatusId" required>
+                <option value="">Выберите социальный статус</option>
+                <% socialStatuses.forEach(status => { %>
+                    <option value="<%= status.id %>" 
+                        <%= user.socialStatusId === status.id ? 'selected' : '' %>>
+                        <%= status.name %> (<%= status.discount %>%)
+                    </option>
+                <% }); %>
+            </select>
+            
+            <select name="tarifId" required>
+                <option value="">Выберите тариф</option>
+                <% tarifs.forEach(tarif => { %>
+                    <option value="<%= tarif.id %>" 
+                        <%= user.tarifId === tarif.id ? 'selected' : '' %>>
+                        <%= tarif.name %> - <%= tarif.price %> руб.
+                    </option>
+                <% }); %>
+            </select>
+            
+            <button type="submit">Сохранить изменения</button>
+        </form>
+        
+        <a href="/dashboard">Назад к списку</a>
+    </div>
+</body>
+</html>
