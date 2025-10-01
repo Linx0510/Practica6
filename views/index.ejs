@@ -55,9 +55,9 @@
                         <td><%= subject.isAvailable ? 'Да' : 'Нет' %></td>
                         <% if (user.role === 'admin') { %>
                         <td class="actions">
-                            <a href="/edit-subject/<%= subject.id %>" class="btn btn-edit">✏️</a>
+                            <a href="/edit-subject/<%= subject.id %>" class="btn btn-edit"><img src="/img/draw-edit-new.svg" style="width: 20px; height: 20px;" alt=""></a>
                             <form action="/delete-subject/<%= subject.id %>" method="POST" style="display:inline;">
-                                <button type="submit" class="btn btn-delete" onclick="return confirm('Удалить предмет?')">🗑️</button>
+                                <button type="submit" class="btn btn-delete" onclick="return confirm('Удалить предмет?')"><img src="/img/trash.svg" style="width: 20px; height: 20px;" alt=""></button>
                             </form>
                         </td>
                         <% } %>
