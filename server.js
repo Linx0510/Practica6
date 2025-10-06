@@ -65,7 +65,7 @@ Teacher.hasMany(Subject);
 
 const requireAuth = (req, res, next) => {
     if (!req.session.user) {
-        return res.redirect('/login');
+        return res.redirect('/main');
     }
     next();
 };
@@ -79,12 +79,162 @@ const requireRole = (roles) => {
     };
 };
 
+// Добавляем корзину в сессию
+app.use((req, res, next) => {
+    if (!req.session.cart) {
+        req.session.cart = [];
+    }
+    next();
+});
+
+// Главная страница (публичная)
+app.get('/', (req, res) => {
+    res.redirect('/main');
+});
+
+app.get('/main', (req, res) => {
+    res.render('main', { 
+        user: req.session.user || null,
+        cartCount: req.session.cart ? req.session.cart.length : 0
+    });
+});
+
+// Защищенные страницы (только для авторизованных)
+app.get('/dashboard', requireAuth, async (req, res) => {
+    try {
+        const featuredSubjects = await Subject.findAll({
+            include: [Department, Field, Teacher],
+            limit: 6,
+            where: { isAvailable: true }
+        });
+        
+        const stats = {
+            totalSubjects: await Subject.count(),
+            availableSubjects: await Subject.count({ where: { isAvailable: true } }),
+            totalDepartments: await Department.count(),
+            totalTeachers: await Teacher.count()
+        };
+
+        res.render('index', { 
+            featuredSubjects,
+            stats,
+            user: req.session.user,
+            cartCount: req.session.cart.length
+        });
+    } catch (error) {
+        console.error('Error fetching data for dashboard:', error);
+        res.status(500).send('Internal Server Error');
+    }
+});
+
+// Страница каталога
+app.get('/catalog', requireAuth, async (req, res) => {
+    try {
+        const subjects = await Subject.findAll({
+            include: [Department, Field, Teacher],
+            where: { isAvailable: true }
+        });
+
+        res.render('catalog', { 
+            subjects,
+            user: req.session.user,
+            cartCount: req.session.cart.length
+        });
+    } catch (error) {
+        console.error('Error fetching catalog:', error);
+        res.status(500).send('Internal Server Error');
+    }
+});
+
+// Корзина
+app.get('/cart', requireAuth, async (req, res) => {
+    try {
+        const cartItems = [];
+        let totalAmount = 0;
+
+        for (const item of req.session.cart) {
+            const subject = await Subject.findByPk(item.subjectId, {
+                include: [Department, Field, Teacher]
+            });
+            if (subject) {
+                cartItems.push({
+                    subject: subject,
+                    quantity: item.quantity
+                });
+                totalAmount += subject.price * item.quantity;
+            }
+        }
+
+        res.render('cart', {
+            cartItems,
+            totalAmount,
+            user: req.session.user,
+            cartCount: req.session.cart.length
+        });
+    } catch (error) {
+        console.error('Error loading cart:', error);
+        res.status(500).send('Internal Server Error');
+    }
+});
+
+// Добавить в корзину
+app.post('/cart/add', requireAuth, (req, res) => {
+    const { subjectId } = req.body;
+    const cart = req.session.cart;
+    
+    const existingItem = cart.find(item => item.subjectId == subjectId);
+    if (existingItem) {
+        existingItem.quantity += 1;
+    } else {
+        cart.push({
+            subjectId: parseInt(subjectId),
+            quantity: 1
+        });
+    }
+    
+    res.json({ success: true, cartCount: cart.length });
+});
+
+// Обновить корзину
+app.post('/cart/update', requireAuth, (req, res) => {
+    const { subjectId, quantity } = req.body;
+    const cart = req.session.cart;
+    
+    if (quantity <= 0) {
+        req.session.cart = cart.filter(item => item.subjectId != subjectId);
+    } else {
+        const item = cart.find(item => item.subjectId == subjectId);
+        if (item) {
+            item.quantity = parseInt(quantity);
+        }
+    }
+    
+    res.json({ success: true, cartCount: cart.length });
+});
+
+// Удалить из корзины
+app.post('/cart/remove', requireAuth, (req, res) => {
+    const { subjectId } = req.body;
+    req.session.cart = req.session.cart.filter(item => item.subjectId != subjectId);
+    
+    res.json({ success: true, cartCount: req.session.cart.length });
+});
+
+// Страницы авторизации
 app.get('/login', (req, res) => {
-    res.render('login');
+    // Если пользователь уже авторизован, перенаправляем на dashboard
+    if (req.session.user) {
+        return res.redirect('/dashboard');
+    }
+    res.render('login', { user: null, cartCount: 0 });
 });
 
 app.get('/register', (req, res) => {
-    res.render('register');
+    // Если пользователь уже авторизован, перенаправляем на dashboard
+    if (req.session.user) {
+        return res.redirect('/dashboard');
+    }
+    res.render('register', { user: null, cartCount: 0 });
 });
 
 app.post('/login', async (req, res) => {
@@ -98,9 +248,9 @@ app.post('/login', async (req, res) => {
                 username: user.username,
                 role: user.role
             };
-            res.redirect('/');
+            res.redirect('/dashboard');
         } else {
-            res.render('login', { error: 'Неверные учетные данные' });
+            res.render('login', { error: 'Неверные учетные данные', user: null, cartCount: 0 });
         }
     } catch (error) {
         console.error('Login error:', error);
@@ -117,40 +267,26 @@ app.post('/register', async (req, res) => {
         res.redirect('/login');
     } catch (error) {
         console.error('Registration error:', error);
-        res.render('register', { error: 'Ошибка регистрации' });
+        res.render('register', { error: 'Ошибка регистрации', user: null, cartCount: 0 });
     }
 });
 
 app.get('/logout', (req, res) => {
     req.session.destroy();
-    res.redirect('/login');
+    res.redirect('/main');
 });
 
-app.get('/', requireAuth, async (req, res) => {
-    try {
-        const subjects = await Subject.findAll({
-            include: [Department, Field, Teacher],
-        });
-        res.render('index', { 
-            subjects,
-            user: req.session.user 
-        });
-    } catch (error) {
-        console.error('Error fetching subjects:', error);
-        res.status(500).send('Internal Server Error');
-    }
-});
-
+// Админ-страницы
 app.get('/add-department', requireAuth, requireRole(['admin']), (req, res) => {
-    res.render('add-department', { user: req.session.user });
+    res.render('add-department', { user: req.session.user, cartCount: req.session.cart.length });
 });
 
 app.get('/add-field', requireAuth, requireRole(['admin']), (req, res) => {
-    res.render('add-field', { user: req.session.user });
+    res.render('add-field', { user: req.session.user, cartCount: req.session.cart.length });
 });
 
 app.get('/add-teacher', requireAuth, requireRole(['admin']), (req, res) => {
-    res.render('add-teacher', { user: req.session.user });
+    res.render('add-teacher', { user: req.session.user, cartCount: req.session.cart.length });
 });
 
 app.get('/add-subject', requireAuth, requireRole(['admin']), async (req, res) => {
@@ -162,7 +298,8 @@ app.get('/add-subject', requireAuth, requireRole(['admin']), async (req, res) =>
             departments, 
             fields, 
             teachers,
-            user: req.session.user 
+            user: req.session.user,
+            cartCount: req.session.cart.length
         });
     } catch (error) {
         console.error('Error fetching data:', error);
@@ -187,7 +324,8 @@ app.get('/edit-subject/:id', requireAuth, requireRole(['admin']), async (req, re
             departments, 
             fields, 
             teachers,
-            user: req.session.user 
+            user: req.session.user,
+            cartCount: req.session.cart.length
         });
     } catch (error) {
         console.error('Error fetching subject for edit:', error);
@@ -200,7 +338,7 @@ app.post('/add-department', requireAuth, requireRole(['admin']), async (req, res
     if (name && faculty) {
         await Department.create({ name, faculty, head });
     }
-    res.redirect('/');
+    res.redirect('/dashboard');
 });
 
 app.post('/add-field', requireAuth, requireRole(['admin']), async (req, res) => {
@@ -208,7 +346,7 @@ app.post('/add-field', requireAuth, requireRole(['admin']), async (req, res) => 
     if (name) {
         await Field.create({ name, code, description });
     }
-    res.redirect('/');
+    res.redirect('/dashboard');
 });
 
 app.post('/add-teacher', requireAuth, requireRole(['admin']), async (req, res) => {
@@ -216,7 +354,7 @@ app.post('/add-teacher', requireAuth, requireRole(['admin']), async (req, res) =
     if (name && position) {
         await Teacher.create({ name, position, email, phone });
     }
-    res.redirect('/');
+    res.redirect('/dashboard');
 });
 
 app.post('/add-subject', requireAuth, requireRole(['admin']), async (req, res) => {
@@ -234,7 +372,7 @@ app.post('/add-subject', requireAuth, requireRole(['admin']), async (req, res) =
                 TeacherId: teacherId,
                 isAvailable: isAvailable === 'on'
             });
-            res.redirect('/');
+            res.redirect('/dashboard');
         } catch (error) {
             console.error('Error adding subject:', error);
             res.status(500).send('Internal Server Error');
@@ -250,7 +388,7 @@ app.post('/delete-subject/:id', requireAuth, requireRole(['admin']), async (req,
         await Subject.destroy({
             where: { id: subjectId },
         });
-        res.redirect('/');
+        res.redirect('/dashboard');
     } catch (error) {
         console.error('Error deleting subject:', error);
         res.status(500).send('Internal Server Error');
@@ -275,11 +413,30 @@ app.post('/edit-subject/:id', requireAuth, requireRole(['admin']), async (req, r
             },
             { where: { id: subjectId } }
         );
-        res.redirect('/');
+        res.redirect('/dashboard');
     } catch (error) {
         console.error('Error updating subject:', error);
         res.status(500).send('Internal Server Error');
     }
+});
+
+app.use((req, res, next) => {
+    res.status(404).render('error', {
+        message: 'Страница не найдена',
+        error: { status: 404 },
+        user: req.session.user || null,
+        cartCount: req.session.cart ? req.session.cart.length : 0
+    });
+});
+
+app.use((err, req, res, next) => {
+    console.error(err.stack);
+    res.status(500).render('error', {
+        message: 'Внутренняя ошибка сервера',
+        error: { status: 500 },
+        user: req.session.user || null,
+        cartCount: req.session.cart ? req.session.cart.length : 0
+    });
 });
 
 (async () => {

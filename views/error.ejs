@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Страница не найдена - 404</title>
+    <link rel="stylesheet" href="/eror.css">
+</head>
+<body>
+    <div class="error-container">
+        <img src="/img/error-svgrepo-com.svg" alt="">
+        <h1 class="error-code">404</h1>
+        <h2 class="error-message">Страница не найдена</h2>
+        <p class="error-description">
+            Извините, запрашиваемая страница не существует или была перемещена.
+        </p>
+        
+       
+        
+        <a href="/" class="home-link">Вернуться на главную</a>
+        
+        <% if (typeof user !== 'undefined' && user) { %>
+            <div style="margin-top: 20px; padding-top: 15px; border-top: 1px solid #F4DBDB;">
+                <p style="color: #666; font-size: 0.9rem;">
+                    Вы вошли как: <strong><%= user.username %></strong> 
+                    (<%= user.role === 'admin' ? 'Администратор' : 'Пользователь' %>)
+                </p>
+            </div>
+        <% } %>
+    </div>
+</body>
+</html>

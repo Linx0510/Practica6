@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Корзина - Учебный Портал</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="/css/style.css" rel="stylesheet">
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container">
+            <a class="navbar-brand" href="/">Учебный Портал</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/">Главная</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/catalog">Каталог предметов</a>
+                    </li>
+                    <% if (user && user.role === 'admin') { %>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="adminDropdown" role="button" data-bs-toggle="dropdown">
+                            Админ-панель
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="/add-subject">Добавить предмет</a></li>
+                            <li><a class="dropdown-item" href="/add-department">Добавить кафедру</a></li>
+                            <li><a class="dropdown-item" href="/add-field">Добавить направление</a></li>
+                            <li><a class="dropdown-item" href="/add-teacher">Добавить преподавателя</a></li>
+                        </ul>
+                    </li>
+                    <% } %>
+                </ul>
+                <ul class="navbar-nav">
+                    <li class="nav-item">
+                        <a class="nav-link position-relative" href="/cart">
+                            Корзина
+                            <% if (cartCount > 0) { %>
+                            <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+                                <%= cartCount %>
+                            </span>
+                            <% } %>
+                        </a>
+                    </li>
+                    <% if (user) { %>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown">
+                            <%= user.username %> (<%= user.role %>)
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="/logout">Выйти</a></li>
+                        </ul>
+                    </li>
+                    <% } else { %>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/login">Войти</a>
+                    </li>
+                    <% } %>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <h1 class="mb-4">Корзина</h1>
+
+        <% if (cartItems.length === 0) { %>
+        <div class="text-center py-5">
+            <h3>Корзина пуста</h3>
+            <p class="text-muted">Добавьте предметы из каталога</p>
+            <a href="/catalog" class="btn btn-primary">Перейти в каталог</a>
+        </div>
+        <% } else { %>
+
+        <div class="row">
+            <div class="col-lg-8">
+                <% cartItems.forEach(item => { %>
+                <div class="card mb-3 cart-item" data-subject-id="<%= item.subject.id %>">
+                    <div class="card-body">
+                        <div class="row align-items-center">
+                            <div class="col-md-6">
+                                <h5><%= item.subject.name %></h5>
+                                <p class="text-muted mb-1">
+                                    <small>
+                                        <%= item.subject.type %> • <%= item.subject.hours %> часов<br>
+                                        <%= item.subject.Teacher.name %>
+                                    </small>
+                                </p>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="input-group">
+                                    <button class="btn btn-outline-secondary quantity-decrease" type="button">-</button>
+                                    <input type="number" class="form-control text-center quantity-input" 
+                                           value="<%= item.quantity %>" min="1">
+                                    <button class="btn btn-outline-secondary quantity-increase" type="button">+</button>
+                                </div>
+                            </div>
+                            <div class="col-md-2 text-end">
+                                <span class="h5 item-total">
+                                    <%= (item.subject.price * item.quantity).toLocaleString() %> ₽
+                                </span>
+                            </div>
+                            <div class="col-md-1 text-end">
+                                <button class="btn btn-outline-danger btn-sm remove-item">
+                                    🗑️
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <% }); %>
+            </div>
+            
+            <div class="col-lg-4">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">Итого</h5>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>Стоимость предметов:</span>
+                            <span id="subtotal"><%= totalAmount.toLocaleString() %> ₽</span>
+                        </div>
+                        <hr>
+                        <div class="d-flex justify-content-between mb-3">
+                            <strong>Общая сумма:</strong>
+                            <strong id="total"><%= totalAmount.toLocaleString() %> ₽</strong>
+                        </div>
+                        <button class="btn btn-primary w-100 btn-lg" id="checkout-btn">
+                            Оформить запись
+                        </button>
+                        <div class="text-center mt-2">
+                            <small class="text-muted">После оформления с вами свяжется администратор</small>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card mt-3">
+                    <div class="card-body">
+                        <h6>Нужна помощь?</h6>
+                        <p class="small text-muted">По вопросам записи на предметы обращайтесь в учебный отдел</p>
+                        <button class="btn btn-outline-secondary w-100">Связаться с поддержкой</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <% } %>
+    </div>
+
+    <footer class="bg-dark text-light mt-5 py-4">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-6">
+                    <h5>Учебный Портал</h5>
+                    <p>Система выбора учебных предметов и курсов</p>
+                </div>
+                <div class="col-md-6 text-end">
+                    <p>&copy; 2024 Учебный Портал. Все права защищены.</p>
+                </div>
+            </div>
+        </div>
+    </footer>
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/public/js/cart.js"></script>
+</body>
+</html>

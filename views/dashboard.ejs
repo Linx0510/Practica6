@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Панель управления - Учебный Портал</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="/css/style.css" rel="stylesheet">
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container">
+            <a class="navbar-brand" href="/">Учебный Портал</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/main">Главная</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/catalog">Каталог</a>
+                    </li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle active" href="#" id="adminDropdown" role="button" data-bs-toggle="dropdown">
+                            Админ-панель
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="/add-subject">Добавить предмет</a></li>
+                            <li><a class="dropdown-item" href="/add-department">Добавить кафедру</a></li>
+                            <li><a class="dropdown-item" href="/add-field">Добавить направление</a></li>
+                            <li><a class="dropdown-item" href="/add-teacher">Добавить преподавателя</a></li>
+                        </ul>
+                    </li>
+                </ul>
+                <ul class="navbar-nav">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/cart">
+                            Корзина
+                            <% if (cartCount > 0) { %>
+                            <span class="badge bg-danger"><%= cartCount %></span>
+                            <% } %>
+                        </a>
+                    </li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                            <%= user.username %> (админ)
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="/main">На сайт</a></li>
+                            <li><a class="dropdown-item" href="/logout">Выйти</a></li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <h1 class="mb-4">Панель управления администратора</h1>
+
+        <!-- Статистика -->
+        <div class="row mb-4">
+            <div class="col-md-3">
+                <div class="card text-white bg-primary">
+                    <div class="card-body">
+                        <h5 class="card-title"><%= stats.totalSubjects %></h5>
+                        <p class="card-text">Всего предметов</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card text-white bg-success">
+                    <div class="card-body">
+                        <h5 class="card-title"><%= stats.availableSubjects %></h5>
+                        <p class="card-text">Доступных предметов</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card text-white bg-warning">
+                    <div class="card-body">
+                        <h5 class="card-title"><%= stats.totalDepartments %></h5>
+                        <p class="card-text">Кафедр</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card text-white bg-info">
+                    <div class="card-body">
+                        <h5 class="card-title"><%= stats.totalTeachers %></h5>
+                        <p class="card-text">Преподавателей</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Действия администратора -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="d-flex gap-2 flex-wrap">
+                    <a href="/add-subject" class="btn btn-primary">Добавить предмет</a>
+                    <a href="/add-department" class="btn btn-secondary">Добавить кафедру</a>
+                    <a href="/add-field" class="btn btn-secondary">Добавить направление</a>
+                    <a href="/add-teacher" class="btn btn-secondary">Добавить преподавателя</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Список предметов -->
+        <h2>Управление учебными предметами</h2>
+        
+        <div class="table-responsive">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Название</th>
+                        <th>Стоимость</th>
+                        <th>Часы</th>
+                        <th>Тип</th>
+                        <th>Кафедра</th>
+                        <th>Направление</th>
+                        <th>Преподаватель</th>
+                        <th>Доступен</th>
+                        <th>Действия</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <% Subjects.forEach(subject => { %>
+                    <tr>
+                        <td><%= subject.name %></td>
+                        <td><%= subject.price.toLocaleString() %> ₽</td>
+                        <td><%= subject.hours %> ч.</td>
+                        <td>
+                            <span class="badge bg-<%= subject.type === 'лекция' ? 'primary' : subject.type === 'практика' ? 'success' : subject.type === 'семинар' ? 'warning' : 'info' %>">
+                                <%= subject.type %>
+                            </span>
+                        </td>
+                        <td><%= subject.Department.name %></td>
+                        <td><%= subject.Field.name %></td>
+                        <td><%= subject.Teacher.name %></td>
+                        <td>
+                            <% if (subject.isAvailable) { %>
+                                <span class="badge bg-success">Да</span>
+                            <% } else { %>
+                                <span class="badge bg-danger">Нет</span>
+                            <% } %>
+                        </td>
+                        <td>
+                            <div class="btn-group btn-group-sm">
+                                <a href="/edit-subject/<%= subject.id %>" class="btn btn-outline-primary">✏️</a>
+                                <form action="/delete-subject/<%= subject.id %>" method="POST" class="d-inline">
+                                    <button type="submit" class="btn btn-outline-danger" onclick="return confirm('Удалить предмет?')">🗑️</button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                    <% }); %>
+                </tbody>
+            </table>
+        </div>
+
+        <% if (Subjects.length === 0) { %>
+        <div class="text-center py-4">
+            <p class="text-muted">Нет доступных учебных предметов</p>
+        </div>
+        <% } %>
+    </div>
+
+    <footer class="bg-dark text-light mt-5 py-4">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-6">
+                    <h5>Учебный Портал</h5>
+                    <p>Система управления учебными предметами</p>
+                </div>
+                <div class="col-md-6 text-end">
+                    <p>&copy; 2024 Учебный Портал. Все права защищены.</p>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
